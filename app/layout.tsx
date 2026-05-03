@@ -11,14 +11,10 @@ const geist = Geist({
 export const metadata: Metadata = {
   title: "Habit Tracker",
   description: "Track your habits daily, stay consistent",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Habits",
-  },
-  icons: {
-    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -39,6 +35,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geist.variable} h-full`}>
+      <head>
+        {/* Explicit manifest link — bypasses Next.js metadata processing */}
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Habits" />
+      </head>
       <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-zinc-950 font-sans antialiased">
         <ServiceWorkerRegistrar />
         {children}

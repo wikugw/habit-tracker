@@ -1,51 +1,39 @@
-const CACHE_NAME = 'habit-tracker-v2'
+const CACHE_NAME = 'habit-tracker-v1'
+const STATIC_ASSETS = [
+  '/',
+  '/manifest.json',
+]
 
 self.addEventListener('install', (event) => {
-  // Skip waiting immediately so new SW activates right away
-  self.skipWaiting()
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      // Only cache the bare minimum — don't block install on failures
-      return cache.addAll(['/']).catch(() => {})
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   )
+  self.skipWaiting()
 })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    Promise.all([
-      // Delete old caches
-      caches.keys().then((keys) =>
-        Promise.all(
-          keys
-            .filter((k) => k !== CACHE_NAME)
-            .map((k) => caches.delete(k))
-        )
-      ),
-      // Take control of all open clients immediately
-      self.clients.claim(),
-    ])
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
   )
+  self.clients.claim()
 })
 
 self.addEventListener('fetch', (event) => {
-  const { request } = event
-  const url = new URL(request.url)
+  if (event.request.method !== 'GET') return
+  if (event.request.url.includes('supabase.co')) return
 
-  // Skip non-GET and cross-origin API calls (Supabase etc)
-  if (request.method !== 'GET') return
-  if (url.origin !== self.location.origin) return
-
-  // Network first, fall back to cache
   event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response.ok) {
-          const clone = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+    caches.match(event.request).then((cached) => {
+      const network = fetch(event.request).then((res) => {
+        if (res.ok) {
+          const clone = res.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
         }
-        return response
+        return res
       })
-      .catch(() => caches.match(request))
+      return cached || network
+    })
   )
 })

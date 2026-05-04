@@ -1,7 +1,7 @@
 {
-  "name": "Habit Tracker",
-  "short_name": "Habits",
-  "id": "/",
+  "name": "My Habit Tracker Pro",
+  "short_name": "MyHabits",
+  "id": "com.habittracker.pro.v1",
   "description": "Track your habits daily, stay consistent",
   "start_url": "/",
   "scope": "/",

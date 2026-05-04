@@ -8,7 +8,12 @@ const STATIC_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) => {
+      // Use cache.add for each asset to avoid failing the whole batch if one fails
+      return Promise.allSettled(
+        STATIC_ASSETS.map(asset => cache.add(asset))
+      )
+    })
   )
   self.skipWaiting()
 })

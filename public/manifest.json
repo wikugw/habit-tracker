@@ -1,14 +1,19 @@
 {
-  "name": "My Habit Tracker Pro",
-  "short_name": "MyHabits",
-  "id": "com.habittracker.pro.v1",
-  "description": "Track your habits daily, stay consistent",
-  "start_url": "/",
+  "name": "Habit Tracker Professional",
+  "short_name": "Habits",
+  "description": "Track your daily habits, stay consistent, and achieve your goals with ease.",
+  "id": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay"],
   "background_color": "#09090b",
   "theme_color": "#09090b",
   "orientation": "portrait",
+  "categories": ["productivity", "lifestyle"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",
@@ -33,6 +38,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Habit Tracker Home"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Habit Tracker Mobile"
     }
   ]
 }

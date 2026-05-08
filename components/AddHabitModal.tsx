@@ -50,8 +50,8 @@ export default function AddHabitModal({ onCreated, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 pb-10 sm:pb-6 z-10 border border-transparent dark:border-zinc-800">
+      <div className="animate-backdrop absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="animate-slide-in-sheet sm:animate-scale-in relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 pb-10 sm:pb-6 z-10 border border-transparent dark:border-zinc-800">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">New Habit</h2>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-2xl leading-none">&times;</button>

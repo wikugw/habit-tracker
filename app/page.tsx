@@ -251,7 +251,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setShowAdd(true)}
-                className="w-10 h-10 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center text-xl leading-none hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors active:scale-95"
+                className="w-10 h-10 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center text-xl leading-none hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-all active:scale-90 hover:scale-110"
               >
                 +
               </button>
@@ -347,7 +347,7 @@ export default function Home() {
               </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 lg:gap-4 lg:items-start">
+            <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 lg:gap-4 lg:items-start" key={tab}>
               {tab === 'today' && pendingToday.length === 0 && doneToday.length > 0 && (
                 <div className="lg:col-span-full bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/40 dark:to-emerald-950/40 border border-green-100 dark:border-green-900 rounded-2xl p-4 text-center">
                   <p className="text-2xl mb-1">🎉</p>

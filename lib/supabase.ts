@@ -23,3 +23,12 @@ export type HabitLog = {
   completed_date: string
   created_at: string
 }
+
+export type JournalEntry = {
+  id: string
+  entry_date: string
+  content: string
+  mood: 'great' | 'good' | 'okay' | 'bad' | 'terrible' | null
+  created_at: string
+  updated_at: string
+}

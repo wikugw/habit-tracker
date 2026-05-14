@@ -1,5 +1,53 @@
 import { supabase, Habit, HabitLog } from './supabase'
 
+export type JournalEntry = {
+  id: string
+  entry_date: string
+  content: string
+  mood: 'great' | 'good' | 'okay' | 'bad' | 'terrible' | null
+  created_at: string
+  updated_at: string
+}
+
+export async function getJournalEntries(fromDate: string, toDate: string): Promise<JournalEntry[]> {
+  const { data, error } = await supabase
+    .from('journal_entries')
+    .select('*')
+    .gte('entry_date', fromDate)
+    .lte('entry_date', toDate)
+    .order('entry_date', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getJournalEntry(date: string): Promise<JournalEntry | null> {
+  const { data, error } = await supabase
+    .from('journal_entries')
+    .select('*')
+    .eq('entry_date', date)
+    .single()
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
+}
+
+export async function upsertJournalEntry(entry: { entry_date: string; content: string; mood: JournalEntry['mood'] }): Promise<JournalEntry> {
+  const { data, error } = await supabase
+    .from('journal_entries')
+    .upsert(entry, { onConflict: 'entry_date' })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteJournalEntry(date: string): Promise<void> {
+  const { error } = await supabase
+    .from('journal_entries')
+    .delete()
+    .eq('entry_date', date)
+  if (error) throw error
+}
+
 export async function getHabits(): Promise<Habit[]> {
   const { data, error } = await supabase
     .from('habits')

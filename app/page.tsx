@@ -3,8 +3,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Habit, HabitLog } from '@/lib/supabase'
 import { getHabits, getAllLogs, getDateRange, formatDate } from '@/lib/api'
+import Link from 'next/link'
 import HabitCard from '@/components/HabitCard'
 import AddHabitModal from '@/components/AddHabitModal'
+import YesterdayReminder from '@/components/YesterdayReminder'
 
 function useDarkMode() {
   const [dark, setDark] = useState(false)
@@ -31,6 +33,7 @@ export default function Home() {
   const [logsMap, setLogsMap] = useState<Record<string, HabitLog[]>>({})
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
+  const [showReminder, setShowReminder] = useState(false)
   const [tab, setTab] = useState<'today' | 'all'>('today')
   const { dark, toggle: toggleDark } = useDarkMode()
 
@@ -54,12 +57,43 @@ export default function Home() {
         if (map[log.habit_id]) map[log.habit_id].push(log)
       }
       setLogsMap(map)
+
+      // Show reminder once per day if any habit was not tracked yesterday
+      const yesterday = (() => {
+        const d = new Date()
+        d.setHours(0, 0, 0, 0)
+        d.setDate(d.getDate() - 1)
+        return formatDate(d)
+      })()
+      const dismissedKey = `reminder-dismissed-${yesterday}`
+      const alreadyDismissed = localStorage.getItem(dismissedKey) === '1'
+
+      if (!alreadyDismissed && fetchedHabits.length > 0) {
+        const hasUntracked = fetchedHabits.some(
+          (h) => !allLogs.some((l) => l.habit_id === h.id && l.completed_date === yesterday)
+        )
+        if (hasUntracked) {
+          // Small delay so the page renders first
+          setTimeout(() => setShowReminder(true), 600)
+        }
+      }
     } finally {
       setLoading(false)
     }
   }, [])
 
   useEffect(() => { loadData() }, [loadData])
+
+  const handleDismissReminder = useCallback(() => {
+    const yesterday = (() => {
+      const d = new Date()
+      d.setHours(0, 0, 0, 0)
+      d.setDate(d.getDate() - 1)
+      return formatDate(d)
+    })()
+    localStorage.setItem(`reminder-dismissed-${yesterday}`, '1')
+    setShowReminder(false)
+  }, [])
 
   const handleLogsChanged = useCallback((habitId: string, newLogs: HabitLog[]) => {
     setLogsMap((prev) => ({ ...prev, [habitId]: newLogs }))
@@ -106,19 +140,11 @@ export default function Home() {
     return max > (best.streak ?? 0) ? { name: h.name, streak: max, color: h.color } : best
   }, {} as { name?: string; streak?: number; color?: string })
 
-  const sharedCardProps = {
-    logs: [] as HabitLog[],
-    onLogsChanged: handleLogsChanged,
-    onArchived: handleArchived,
-    onUpdated: handleUpdated,
-  }
-
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col lg:flex-row">
 
       {/* ── SIDEBAR (desktop only) ─────────────────────────────── */}
       <aside className="hidden lg:flex lg:flex-col lg:w-72 xl:w-80 lg:min-h-screen bg-white dark:bg-zinc-900 border-r border-zinc-100 dark:border-zinc-800 p-6 sticky top-0 self-start h-screen overflow-y-auto">
-        {/* Logo / brand */}
         <div className="flex items-center gap-2.5 mb-8">
           <div className="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center text-sm">
             🟩
@@ -126,17 +152,14 @@ export default function Home() {
           <span className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">Habit Tracker</span>
         </div>
 
-        {/* Date block */}
         <div className="mb-6">
           <p className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-0.5">{dayName}</p>
           <p className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{dateStr}</p>
           <p className="text-sm text-zinc-400 dark:text-zinc-500">{yearStr}</p>
         </div>
 
-        {/* Progress ring + label */}
         {habits.length > 0 && (
           <div className="mb-6 flex items-center gap-4 bg-zinc-50 dark:bg-zinc-800 rounded-2xl p-4">
-            {/* Mini ring */}
             <div className="relative w-14 h-14 flex-shrink-0">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
                 <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="6" className="text-zinc-200 dark:text-zinc-700" />
@@ -160,7 +183,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Nav tabs */}
         <nav className="flex flex-col gap-1 mb-6">
           {(['today', 'all'] as const).map((t) => (
             <button
@@ -181,9 +203,15 @@ export default function Home() {
               )}
             </button>
           ))}
+          <Link
+            href="/journal"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          >
+            <span>📔</span>
+            Journal
+          </Link>
         </nav>
 
-        {/* Stats */}
         <div className="flex flex-col gap-2 mb-6">
           <p className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide px-1">Stats</p>
           {[
@@ -212,7 +240,6 @@ export default function Home() {
           )}
         </div>
 
-        {/* Bottom actions */}
         <div className="mt-auto flex flex-col gap-2">
           <button
             onClick={() => setShowAdd(true)}
@@ -232,7 +259,7 @@ export default function Home() {
       {/* ── MAIN CONTENT ──────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-h-screen">
 
-        {/* Mobile header (hidden on desktop) */}
+        {/* Mobile header */}
         <div className="lg:hidden bg-white dark:bg-zinc-900 px-5 pt-12 pb-5 shadow-sm sticky top-0 z-30 border-b border-transparent dark:border-zinc-800">
           <div className="flex items-start justify-between mb-4">
             <div>
@@ -324,7 +351,7 @@ export default function Home() {
         </div>
 
         {/* Habit list */}
-        <div className="flex-1 px-4 lg:px-8 py-4 lg:py-6">
+        <div className="flex-1 px-4 lg:px-8 py-4 lg:py-6 pb-24 lg:pb-6">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="flex flex-col items-center gap-3">
@@ -392,6 +419,44 @@ export default function Home() {
       </div>
 
       {showAdd && <AddHabitModal onCreated={handleCreated} onClose={() => setShowAdd(false)} />}
+
+      {showReminder && (
+        <YesterdayReminder
+          habits={habits}
+          logsMap={logsMap}
+          onLogsChanged={handleLogsChanged}
+          onDismiss={handleDismissReminder}
+        />
+      )}
+
+      {/* Mobile bottom tab bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 flex items-center px-2 pb-safe">
+        <button
+          onClick={() => setTab('today')}
+          className={`flex-1 flex flex-col items-center py-3 gap-0.5 transition-colors ${
+            tab === 'today' ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500'
+          }`}
+        >
+          <span className="text-lg leading-none">📅</span>
+          <span className="text-[10px] font-semibold">Today</span>
+        </button>
+        <button
+          onClick={() => setTab('all')}
+          className={`flex-1 flex flex-col items-center py-3 gap-0.5 transition-colors ${
+            tab === 'all' ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500'
+          }`}
+        >
+          <span className="text-lg leading-none">📋</span>
+          <span className="text-[10px] font-semibold">All</span>
+        </button>
+        <Link
+          href="/journal"
+          className="flex-1 flex flex-col items-center py-3 gap-0.5 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+        >
+          <span className="text-lg leading-none">📔</span>
+          <span className="text-[10px] font-semibold">Journal</span>
+        </Link>
+      </div>
     </div>
   )
 }
